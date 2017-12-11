@@ -136,7 +136,7 @@ class TestPyGraph(unittest.TestCase):
         negNode.evaluate()
         self.assertEqual(negNode.portsOut[0].value, -7.75, "Output from Negate Node incorrect")
 
-    def test_multipleOutputs(self):
+    def test_MultipleOutputs(self):
         """
         Testing the
 
@@ -164,7 +164,12 @@ class TestPyGraph(unittest.TestCase):
         self.assertEqual(sumNode1.getOutputPort("result").value, 0)
         self.assertEqual(sumNode2.getOutputPort("result").value, -2)
 
-    def test_disconnectNode(self):
+        heads = graph.getNetworkHeads()
+        self.assertEqual(len(heads), 2)
+        tails = graph.getNetworkTails()
+        self.assertEqual(len(tails), 1)
+
+    def test_DisconnectNode(self):
         """
         Copy of "test_3NodeFork", except we disconnect Node2, and make sure that it doesn't get evaluated
 
@@ -192,6 +197,11 @@ class TestPyGraph(unittest.TestCase):
         negNode.evaluate()
         self.assertEqual(negNode.portsOut[0].value, -7.75, "Output from Negate Node incorrect")
 
+        heads = graph.getNetworkHeads()
+        self.assertEqual(len(heads), 1)
+        tails = graph.getNetworkTails()
+        self.assertEqual(len(tails), 2)
+
         sumNode_2.getOutputPort("result").disconnect(sumNode_3.getInputPort("value2"))
         self.assertFalse(sumNode_2.getOutputPort("result").isConnected())
         self.assertFalse(sumNode_3.getInputPort("value2").isConnected())
@@ -199,6 +209,43 @@ class TestPyGraph(unittest.TestCase):
         negNode.evaluate()
         self.assertEqual(negNode.portsOut[0].value, -2.5, "Output from Negate Node incorrect")
 
+        heads = graph.getNetworkHeads()
+        self.assertEqual(len(heads), 2)
+
+    def test_NodeIsConnected(self):
+        """
+        Creates 3 nodes, 2 connected one not, Checks the node isConnected method is working correctly
+        [n] -- [n]
+        [n]
+        """
+        graph = mGraph.Graph()
+        nSum1 = graph.createNode(mNode.SumNode)
+        nSum2 = graph.createNode(mNode.SumNode)
+        nSum3 = graph.createNode(mNode.SumNode)
+
+        nSum1.getOutputPort("result").connect(nSum2.getInputPort("value1"))
+
+        self.assertFalse(nSum3.isConnected())
+        self.assertTrue(nSum1.isConnected())
+        self.assertTrue(nSum2.isConnected())
+
+        # testing graph tail and head retrieval
+        heads = graph.getNetworkHeads()
+        self.assertEqual(len(heads),2)
+        tails = graph.getNetworkTails()
+        self.assertEqual(len(tails),2)
+
+    def test_DirtyEvaluation(self):
+        """
+        This method tests to see if dirty nodes get evaluated, and clean nodes just get there values read.
+        Trying to be more efficient with how nodes are evaluated and executed.
+
+        Thought behind implementation:
+            If there was a graph with a thousand interconnected nodes, and nothing was dirtied, but the graph needed to evaluate
+            how can we keep the computations to a minimum
+
+        """
+        pass
 
 if __name__ == "__main__":
     unittest.main()

@@ -4,6 +4,9 @@ Graph
 - Is a container for Nodes and edges.
 - these nodes can be connected, with edges, or can be individual islands( nodes with edges, that are not all connected)
 
+ TODO:
+ - setup two graph evaluation types, 1. Directional eg.ICE, 2. All Node Evaluating eg.Dependency Graph
+ - a good way of finding islands in the nodes
 """
 import Node as mNode
 
@@ -23,21 +26,46 @@ class Graph(object):
         self.nodes.append(node)
         return node
 
-class Edge(object):
-    def __init__(self):
-        self.sourcePort
-        self.destinationPort
-
-    @classmethod
-    def connect(cls, srcPort, dstPort, force=False):
+    def getNetworkHeads(self):
         """
-        Connect two ports together, One can only c
-        Args:
-            srcPort (Port): port you will be connecting from.
-            dstPort (Port): port you will be connecting too.
-            force (bool): If you want to force the connection, disconnecting a connection that did exist
+        Returns the head nodes of all the networks(islands) in this graph
 
         Returns:
-            bool: The return value. True is successful, False if connection failed
+            []: of nodes
         """
-        pass
+        nodesWithNoConnectedOutput = []
+
+        for node in self.nodes:
+            if not node.isConnected():
+                nodesWithNoConnectedOutput.append(node)
+            else:
+                connected = False
+                for port in node.portsOut:
+                    if port.isConnected():
+                        connected = True
+                if not connected:
+                    nodesWithNoConnectedOutput.append(node)
+        return nodesWithNoConnectedOutput
+
+    def getNetworkTails(self):
+        """
+        Returns the tail nodes of all the networks(islands) in this graph
+
+        Returns:
+            []: of nodes
+        """
+        nodesWithNoConnectedInput = []
+
+        for node in self.nodes:
+            if not node.isConnected():
+                nodesWithNoConnectedInput.append(node)
+            else:
+                connected = False
+                for port in node.portsIn:
+                    if port.isConnected():
+                        connected = True
+                if not connected:
+                    nodesWithNoConnectedInput.append(node)
+        return nodesWithNoConnectedInput
+
+

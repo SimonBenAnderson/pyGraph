@@ -22,3 +22,6 @@ and easy to follow what is happening.
 - [ ] Save the network, nodes, ports, edges and values
 - [ ] load the network
 - [ ] handle islands of nodes( two trees that are not connected ), which island must we evaluate
+- [ ] Graph.evaluate -> needs to find the head/heads of each island and perform the evaluate, so that the nodes are all run correctly
+- [ ] Create a dirty parameter for ports/nodes, that allows values to record being dirty, and if so only get there upstream evaluated.
+- [ ] Parallel/concurrent code, allowing the graph to constantly be evaluating, as you edit nodes. eg evaluation modes-passive-active-at a specific intervals

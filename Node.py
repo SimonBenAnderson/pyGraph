@@ -7,12 +7,14 @@ class Node(object):
         name: The name of this node, allowing users to rename there node
         portsIn: List of input ports
         portsOut: List of output ports
+        dirty: if the node has had some values updated on it, then it gets flagged as dirty
         """
         self.type = ""
         self.id = -1
         self.name = ""
         self.portsIn = []
         self.portsOut = []
+        self.dirty = False
 
         self.initInputPorts()
         self.initOutputPorts()
@@ -82,6 +84,16 @@ class Node(object):
         self.portsOut.append(newPort)
         return newPort
 
+    def isConnected(self):
+        """
+        Checks all ports to see if any are connected, if a connection is found, then returns true
+        """
+        for port in self.portsIn + self.portsOut:
+            if port.isConnected():
+                return True
+        return False
+
+
     def __repr__(self):
         return "{} > Input Ports: {}  OutputPorts:{}".format(self.type, len(self.portsIn), len(self.portsOut))
 
@@ -103,7 +115,7 @@ class SumNode(Node):
 
     def evaluate(self):
         """
-        The brain of node, This performs the main computation of the node and updates the output ports
+        Performs the computation of the node and updates the output ports
         """
         sum = 0
         for port in self.portsIn:

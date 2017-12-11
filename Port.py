@@ -7,11 +7,24 @@ class Port(object):
 
         Args:
             edges ([]): is a list of ports that this port is connected to
+            dirty (bool): if the value of this Port has been updated then the node is set to dirty
         """
         self.name = name
         self.node = node
-        self.value = defaultValue # maybe have this as a property, that if isConnected then is queries the connected port
+        self._value = defaultValue # maybe have this as a property, that if isConnected then is queries the connected port
+        self.defaultValue = defaultValue
         self.edges = []
+        self.dirty = False
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, val):
+        self._value = val
+        self.dirty = True
+        self.node.dirty = True
 
     def isConnected(self):
         if len(self.edges):
