@@ -10,7 +10,6 @@ Graph
 """
 import Node as mNode
 
-
 class Graph(object):
     def __init__(self):
         self.nodes = []
@@ -71,4 +70,3 @@ class Graph(object):
     def evaluate(self):
         for head in self.getNetworkHeads():
             head.evaluate()
-

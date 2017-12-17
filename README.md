@@ -23,7 +23,7 @@ and easy to follow what is happening.
 - [ ] load the network
 - [ ] handle islands of nodes( two trees that are not connected ), which island must we evaluate
 - [ ] Graph.evaluate -> needs to find the head/heads of each island and perform the evaluate, so that the nodes are all run correctly
-- [ ] Create a dirty parameter for ports/nodes, that allows values to record being dirty, and if so only get there upstream evaluated.
+- [x] Create a dirty parameter for ports/nodes, that allows values to record being dirty, and if so only get there upstream evaluated.
 - [ ] Parallel/concurrent code, allowing the graph to constantly be evaluating, as you edit nodes. eg evaluation modes-passive-active-at a specific intervals
 
 ## DIRTY IMPLEMENTATION
@@ -39,3 +39,6 @@ get set to dirty, and this travels up all the way to the head. The reason for th
 until you find a shared node ( two dirty node networks connect to the same node), 
 and compute only up to that node, then once both ports are updated continue with 
 the evaluation till you reach the end.
+
+- **TEST IMPLEMENTED:** I created another branch that did not have the dirty flags implemented, and ran over a node network 100 times, evaluating the
+head nodes. The graph with the dirty parameters took 0.49ms while the graph with no dirty parameters took 1.766ms to complete the same 100 evaluations.
