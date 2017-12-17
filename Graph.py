@@ -68,4 +68,7 @@ class Graph(object):
                     nodesWithNoConnectedInput.append(node)
         return nodesWithNoConnectedInput
 
+    def evaluate(self):
+        for head in self.getNetworkHeads():
+            head.evaluate()
 

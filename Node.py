@@ -14,10 +14,29 @@ class Node(object):
         self.name = ""
         self.portsIn = []
         self.portsOut = []
-        self.dirty = False
+        self._dirty = False
 
         self.initInputPorts()
         self.initOutputPorts()
+
+
+    """
+    dirty property
+    This property is used to check if the node contains any ports 
+    that are dirty, or connection to nodes that are dirty.
+    
+    How to clean the node:
+    When a node is evaluated, all input ports should be checked to 
+    see if they are clean, if they are all clean then set the node 
+    to be clean by setting the self._dirty = true
+    """
+    @property
+    def dirty(self):
+        return self._dirty
+
+    @dirty.setter
+    def dirty(self, val):
+        self._dirty = val
 
     def initInputPorts(self):
         """
@@ -144,3 +163,37 @@ class NegateNode(Node):
             self.portsOut[0].value = -self.portsIn[0].edges[0].value
         else:
             self.portsOut[0].value = -self.portsIn[0].value
+
+class SubtractNode(Node):
+    def __init__(self):
+        super(SubtractNode, self).__init__()
+        self.type = self.__class__.__name__
+
+    def initInputPorts(self):
+        # initialise Input Ports
+        self.addInputPort(name="value1")
+        self.addInputPort(name="value2")
+
+    def initOutputPorts(self):
+        # initialise Output Ports
+        self.addOutputPort(name="result")
+
+    """
+    TODO: Looking at breaking up the evaluation process into submethods, 
+    so you dont have to have alot of boiler plate code
+    
+    """
+    def evaluateConnection(self):
+        for port in self.portsIn:
+            if port.isConnected():
+                port.edges[0].node.evaluate()
+                port.value = port.edges[0].value
+
+    def evaluate(self):
+        self.evaluateConnection()
+
+        value = self.portsIn[0].value
+        for port in self.portsIn[1:]:
+            value -= port.value
+
+        self.portsOut[0].value = value

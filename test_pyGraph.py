@@ -245,7 +245,28 @@ class TestPyGraph(unittest.TestCase):
             how can we keep the computations to a minimum
 
         """
-        pass
+        graph = mGraph.Graph()
+        sumNode_1 = graph.createNode(mNode.SumNode)
+        sumNode_2 = graph.createNode(mNode.SumNode)
+        subNode = graph.createNode(mNode.SubtractNode)
+        negNode = graph.createNode(mNode.NegateNode)
+
+        sumNode_1.getOutputPort("result").connect(subNode.getInputPort("value1"))
+        sumNode_2.getOutputPort("result").connect(subNode.getInputPort("value2"))
+        subNode.getOutputPort("result").connect(negNode.getInputPort("value"))
+
+        sumNode_1.portsIn[0].value = 1.0
+        sumNode_1.portsIn[1].value = 1.25
+        sumNode_2.portsIn[0].value = 3.0
+        sumNode_2.portsIn[1].value = 2.25
+
+        negNode.evaluate()
+        self.assertEqual(negNode.getOutputPort("result").value, 3)
+
+        sumNode_1.portsIn[0].value = 0.0
+        graph.evaluate()
+        self.assertEqual(negNode.getOutputPort("result").value, 4)
+
 
 if __name__ == "__main__":
     unittest.main()
