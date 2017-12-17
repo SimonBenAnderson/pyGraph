@@ -14,7 +14,7 @@ class Node(object):
         self.name = ""
         self.portsIn = []
         self.portsOut = []
-        self._dirty = False
+        self._dirty = True
 
         self.initInputPorts()
         self.initOutputPorts()
@@ -37,6 +37,12 @@ class Node(object):
     @dirty.setter
     def dirty(self, val):
         self._dirty = val
+        # if setting the node to be dirty, all conncted nodes up stream must be have there
+        # connected inputs set to dirty as well.
+        if self._dirty :
+            for port in self.portsOut:
+                for edgePort in port.edges:
+                    edgePort.setDirty()
 
     def initInputPorts(self):
         """
@@ -132,19 +138,29 @@ class SumNode(Node):
         # initialise Output Ports
         self.addOutputPort(name="result")
 
+
+    def evaluateConnection(self):
+        for port in self.portsIn:
+            if port.dirty:
+                if port.isConnected():
+                    port.edges[0].node.evaluate()
+                    port.value = port.edges[0].value
+                port.dirty = False
+
+
     def evaluate(self):
         """
         Performs the computation of the node and updates the output ports
         """
-        sum = 0
-        for port in self.portsIn:
-            # checks if the port is connected, if so tells the connected port's npde to evaluate, to make sure that it has the latest values.
-            if port.isConnected():
-                port.edges[0].node.evaluate()
-                sum += port.edges[0].value
-            else:
+        if self.dirty:
+            self.evaluateConnection()
+
+            sum = 0
+            for port in self.portsIn:
                 sum += port.value
-        self.portsOut[0].value = sum
+            self.portsOut[0].value = sum
+#            self.portsOut[0].dirty = False
+            self.dirty=False
 
 class NegateNode(Node):
     def __init__(self):
@@ -157,12 +173,22 @@ class NegateNode(Node):
     def initOutputPorts(self):
         self.addOutputPort("result")
 
+    def evaluateConnection(self):
+        for port in self.portsIn:
+            if port.dirty:
+                if port.isConnected():
+                    port.edges[0].node.evaluate()
+                    port.value = port.edges[0].value
+                port.dirty = False
+
     def evaluate(self):
-        if self.portsIn[0].isConnected():
-            self.portsIn[0].edges[0].node.evaluate()
-            self.portsOut[0].value = -self.portsIn[0].edges[0].value
-        else:
+        # only evaluates the node if it is dirty
+        if self.dirty:
+            self.evaluateConnection()
             self.portsOut[0].value = -self.portsIn[0].value
+#            self.portsOut[0].dirty = False
+            self.dirty=False
+
 
 class SubtractNode(Node):
     def __init__(self):
@@ -185,15 +211,24 @@ class SubtractNode(Node):
     """
     def evaluateConnection(self):
         for port in self.portsIn:
-            if port.isConnected():
-                port.edges[0].node.evaluate()
-                port.value = port.edges[0].value
+            if port.dirty:
+                if port.isConnected():
+                    port.edges[0].node.evaluate()
+                    port.value = port.edges[0].value
+                port.dirty = False
 
     def evaluate(self):
-        self.evaluateConnection()
+        # only evaluates the node if it is dirty
+        if self.dirty:
+            self.evaluateConnection()
 
-        value = self.portsIn[0].value
-        for port in self.portsIn[1:]:
-            value -= port.value
+            # TODO: move just the evaluation code into a function and have
+            # all the dirty and updating of the ports to outside of this function
+            value = self.portsIn[0].value
+            for port in self.portsIn[1:]:
+                value -= port.value
 
-        self.portsOut[0].value = value
+            self.portsOut[0].value = value
+#            self.portsOut[0].dirty = False # due to the output port never being dirty
+            self.dirty = False
+

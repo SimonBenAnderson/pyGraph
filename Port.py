@@ -23,8 +23,7 @@ class Port(object):
     @value.setter
     def value(self, val):
         self._value = val
-        self.dirty = True
-        self.node.dirty = True
+        self.setDirty()
 
     def isConnected(self):
         if len(self.edges):
@@ -36,6 +35,13 @@ class Port(object):
 
     def isDestination(self):
         pass
+
+    def setDirty(self):
+        """
+        Sets the port and the ports node to be dirty
+        """
+        self.dirty = True
+        self.node.dirty = True
 
     def connect(self, destPort):
         """
@@ -52,6 +58,9 @@ class Port(object):
 
         self.edges.append(destPort)
         destPort.edges.append(self)
+        # as the port has been connected, the connected node has to be updated
+        destPort.setDirty()
+
         return True
 
     def disconnect(self, discPort=None):
@@ -67,9 +76,11 @@ class Port(object):
         if discPort is None:
             for port in self.edges:
                 port.disconnect(self)
+                port.setDirty()
             self.edges = []
         else:
             for port in self.edges:
                 if port == discPort:
                     self.edges.remove(port)
                     port.disconnect(self)
+                    port.setDirty()

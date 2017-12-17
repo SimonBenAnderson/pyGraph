@@ -36,6 +36,13 @@ class TestNode(unittest.TestCase):
         negNode.evaluate()
         self.assertEqual(negNode.portsOut[0].value, -20)
 
+    def test_SubtractNode(self):
+        subNode = mNode.SubtractNode()
+        subNode.portsIn[0].value = 20
+        subNode.portsIn[1].value = 10
+        subNode.evaluate()
+        self.assertEqual(subNode.portsOut[0].value, 10)
+
 """
 Test pyGraph
 - Checks a node gets created correctly
@@ -205,9 +212,10 @@ class TestPyGraph(unittest.TestCase):
         sumNode_2.getOutputPort("result").disconnect(sumNode_3.getInputPort("value2"))
         self.assertFalse(sumNode_2.getOutputPort("result").isConnected())
         self.assertFalse(sumNode_3.getInputPort("value2").isConnected())
+        self.assertEqual(sumNode_3.getInputPort("value2").value, 5.25, "Disconnected port values should be equal to there last connected input")
 
         negNode.evaluate()
-        self.assertEqual(negNode.portsOut[0].value, -2.5, "Output from Negate Node incorrect")
+        self.assertEqual(negNode.portsOut[0].value, -7.75, "Output from Negate Node incorrect")
 
         heads = graph.getNetworkHeads()
         self.assertEqual(len(heads), 2)
