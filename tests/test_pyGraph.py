@@ -1,8 +1,6 @@
 import unittest
-import Node as mNode
-import Graph as mGraph
-
-# TODO: Add dirty command to the node, allowing a check to bypass all the computations
+import pyGraph.Node as mNode
+import pyGraph.Graph as mGraph
 
 """
 Test Node, is for testing all node types, making sure that the node itself is working correctly
