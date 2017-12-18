@@ -43,6 +43,34 @@ class TestNode(unittest.TestCase):
         subNode.evaluate()
         self.assertEqual(subNode.portsOut[0].value, 10)
 
+    def test_MultiplyNode(self):
+        node = mNode.MultiplyNode()
+        node.getInputPort("value1").value = 2
+        node.getInputPort("value2").value = 2
+        node.evaluate()
+        self.assertEqual(node.getOutputPort("result").value, 4)
+
+    def test_ContainerNode(self):
+        contNode = mNode.ContainerNode()
+        contNode.addInputPort("squareRoot")
+        contNode.addOutputPort("result")
+        mulNode = mNode.MultiplyNode()
+
+        contNode.addNode(mulNode)
+        contNode.getInputPort("squareRoot").connect(mulNode.getInputPort("value1"))
+        contNode.getInputPort("squareRoot").connect(mulNode.getInputPort("value2"))
+        mulNode.portsOut[0].connect(contNode.getOutputPort("result"))
+
+        contNode.getInputPort("squareRoot").value=3
+        contNode.evaluate()
+        self.assertEqual(contNode.getOutputPort("result").value, 9)
+
+        negNode = mNode.NegateNode()
+        negNode.getInputPort("value").connect(contNode.getOutputPort("result"))
+        negNode.evaluate()
+        self.assertEqual(negNode.getOutputPort("result").value, -9)
+
+
 """
 Test pyGraph
 - Checks a node gets created correctly

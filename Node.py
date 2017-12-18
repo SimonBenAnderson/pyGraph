@@ -36,13 +36,13 @@ class Node(object):
 
     @dirty.setter
     def dirty(self, val):
-        self._dirty = val
         # if setting the node to be dirty, all conncted nodes up stream must be have there
         # connected inputs set to dirty as well.
-        if self._dirty :
+        if self._dirty == False and val:
             for port in self.portsOut:
                 for edgePort in port.edges:
                     edgePort.setDirty()
+        self._dirty = val
 
     def initInputPorts(self):
         """
@@ -118,6 +118,13 @@ class Node(object):
                 return True
         return False
 
+    def evaluateConnection(self):
+        for port in self.portsIn:
+            if port.dirty:
+                if port.isConnected():
+                    port.edges[0].node.evaluate()
+                    port.value = port.edges[0].value
+                port.dirty = False
 
     def __repr__(self):
         return "{} > Input Ports: {}  OutputPorts:{}".format(self.type, len(self.portsIn), len(self.portsOut))
@@ -138,16 +145,6 @@ class SumNode(Node):
         # initialise Output Ports
         self.addOutputPort(name="result")
 
-
-    def evaluateConnection(self):
-        for port in self.portsIn:
-            if port.dirty:
-                if port.isConnected():
-                    port.edges[0].node.evaluate()
-                    port.value = port.edges[0].value
-                port.dirty = False
-
-
     def evaluate(self):
         """
         Performs the computation of the node and updates the output ports
@@ -159,7 +156,6 @@ class SumNode(Node):
             for port in self.portsIn:
                 sum += port.value
             self.portsOut[0].value = sum
-#            self.portsOut[0].dirty = False
             self.dirty=False
 
 class NegateNode(Node):
@@ -173,22 +169,12 @@ class NegateNode(Node):
     def initOutputPorts(self):
         self.addOutputPort("result")
 
-    def evaluateConnection(self):
-        for port in self.portsIn:
-            if port.dirty:
-                if port.isConnected():
-                    port.edges[0].node.evaluate()
-                    port.value = port.edges[0].value
-                port.dirty = False
-
     def evaluate(self):
         # only evaluates the node if it is dirty
         if self.dirty:
             self.evaluateConnection()
             self.portsOut[0].value = -self.portsIn[0].value
-#            self.portsOut[0].dirty = False
             self.dirty=False
-
 
 class SubtractNode(Node):
     def __init__(self):
@@ -204,19 +190,6 @@ class SubtractNode(Node):
         # initialise Output Ports
         self.addOutputPort(name="result")
 
-    """
-    TODO: Looking at breaking up the evaluation process into submethods, 
-    so you dont have to have alot of boiler plate code
-    
-    """
-    def evaluateConnection(self):
-        for port in self.portsIn:
-            if port.dirty:
-                if port.isConnected():
-                    port.edges[0].node.evaluate()
-                    port.value = port.edges[0].value
-                port.dirty = False
-
     def evaluate(self):
         # only evaluates the node if it is dirty
         if self.dirty:
@@ -229,6 +202,91 @@ class SubtractNode(Node):
                 value -= port.value
 
             self.portsOut[0].value = value
-#            self.portsOut[0].dirty = False # due to the output port never being dirty
             self.dirty = False
 
+class MultiplyNode(Node):
+    def __init__(self):
+        super(MultiplyNode, self).__init__()
+        self.type = self.__class__.__name__
+
+    def initInputPorts(self):
+        # initialise Input Ports
+        self.addInputPort(name="value1")
+        self.addInputPort(name="value2")
+
+    def initOutputPorts(self):
+        # initialise Output Ports
+        self.addOutputPort(name="result")
+
+    def evaluate(self):
+        # only evaluates the node if it is dirty
+        if self.dirty:
+            self.evaluateConnection()
+            val = self.portsIn[0].value
+            for port in self.portsIn[1:]:
+                val *= port.value
+
+            self.portsOut[0].value = val
+            self.dirty = False
+
+"""
+Container Node:
+This node, is used to create a node which is actually multiple 
+interconnected nodes, performing a specific task. Instead of coding 
+a node, you can create a node from interconnected Nodes.
+
+Users create there own input and output ports.
+
+Port Structure:
+Internal input and output Ports, that the contained nodes will connect to,
+to access data from outside the container, and send data outside of the container
+When a port is added to this node, an opposite port with the same name will be added 
+to the internal ports.
+"""
+#TODO: Add some checks to make sure when you remove a node, it is no longer connected to any node inside of the container
+#TODO: need to alter the ports for a container else, you end up with and output port, connected to an output port, and then an infinit dirty update loop occurs
+class ContainerNode(Node):
+    internalNodes = []
+
+    def __init__(self):
+        super(ContainerNode, self).__init__()
+        self.type = self.__class__.__name__
+
+    def evaluate(self):
+        if self.dirty:
+            self.evaluateConnection()
+
+            # evaluate internal connections
+            for port in self.portsIn:
+                for edge in port.internalEdges:
+                    edge.value = port.value
+                    edge.dirty = False
+                    port.dirty = False
+
+            for port in self.portsOut:
+                port.internalEdges[0].node.evaluate()
+                port.value = port.internalEdges[0].value
+                port.dirty = False
+
+            self.dirty = False
+
+    def addNode(self, node):
+        self.internalNodes.append(node)
+
+    def createNode(self, nodeType):
+        newNode = nodeType()
+        self.internalNodes.append(newNode)
+        return newNode
+
+    def removeNode(self, node):
+        self.internalNodes.remove(node)
+
+    def addInputPort(self, name, value=0.0):
+        newPort = port.ContainerPort(name, self, value)
+        self.portsIn.append(newPort)
+        return newPort
+
+    def addOutputPort(self, name):
+        newPort = port.ContainerPort(name, self)
+        self.portsOut.append(newPort)
+        return newPort
