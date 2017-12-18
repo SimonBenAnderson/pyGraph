@@ -70,6 +70,14 @@ class TestNode(unittest.TestCase):
         negNode.evaluate()
         self.assertEqual(negNode.getOutputPort("result").value, -9)
 
+    def test_ScalarToVectorNode(self):
+        node = mNode.ScalarToVector()
+        node.getInputPort("x").value = 1
+        node.getInputPort("y").value = 2
+        node.getInputPort("z").value = 3
+        node.evaluate()
+
+        self.assertEqual(node.getOutputPort("result").value, [1,2,3])
 
 """
 Test pyGraph

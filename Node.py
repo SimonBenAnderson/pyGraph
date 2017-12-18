@@ -229,6 +229,83 @@ class MultiplyNode(Node):
             self.portsOut[0].value = val
             self.dirty = False
 
+#======== CONSTANTS ==========
+class ConstantNode(Node):
+    def __init__(self):
+        super(ConstantNode, self).__init__()
+        self.type = self.__class__.__name__
+
+    def initInputPorts(self):
+        # initialise Input Ports
+        self.addInputPort(name="value")
+
+    def initOutputPorts(self):
+        # initialise Output Ports
+        self.addOutputPort(name="result")
+
+    def evaluate(self):
+        self.portsOut[0].value = self.portsIn[0].value
+
+class ArrayNode(ConstantNode):
+    def __init__(self):
+        super(ConstantNode, self).__init__()
+        self.type = self.__class__.__name__
+
+class IntNode(ConstantNode):
+    def __init__(self):
+        super(ConstantNode, self).__init__()
+        self.type = self.__class__.__name__
+
+class FloatNode(ConstantNode):
+    def __init__(self):
+        super(ConstantNode, self).__init__()
+        self.type = self.__class__.__name__
+
+class MatrixNode(ConstantNode):
+    def __init__(self):
+        super(ConstantNode, self).__init__()
+        self.type = self.__class__.__name__
+
+class ScalarToVector(ConstantNode):
+    def __init__(self):
+        super(ConstantNode, self).__init__()
+        self.type = self.__class__.__name__
+
+    def initInputPorts(self):
+        # initialise Input Ports
+        self.addInputPort(name="x")
+        self.addInputPort(name="y")
+        self.addInputPort(name="z")
+
+    def evaluate(self):
+        self.portsOut[0].value = [self.portsIn[0].value, self.portsIn[1].value, self.portsIn[2].value]
+
+class VectorToScalar(ConstantNode):
+    def __init__(self):
+        super(ConstantNode, self).__init__()
+        self.type = self.__class__.__name__
+
+    def initInputPorts(self):
+        self.addInputPort(name="vector")
+
+    def initOutputPorts(self):
+        self.addOutputPort(name="x")
+        self.addOutputPort(name="y")
+        self.addOutputPort(name="z")
+
+    def evaluate(self):
+        self.portsOut[0].value = self.portsIn[0].value[0]
+        self.portsOut[1].value = self.portsIn[0].value[1]
+        self.portsOut[2].value = self.portsIn[0].value[2]
+
+
+"""
+Note Node:
+This node is not actually an evaluation node, but will be used to keep notes when the UI is implemented
+"""
+class NoteNode():
+    pass
+
 """
 Container Node:
 This node, is used to create a node which is actually multiple 
@@ -244,7 +321,6 @@ When a port is added to this node, an opposite port with the same name will be a
 to the internal ports.
 """
 #TODO: Add some checks to make sure when you remove a node, it is no longer connected to any node inside of the container
-#TODO: need to alter the ports for a container else, you end up with and output port, connected to an output port, and then an infinit dirty update loop occurs
 class ContainerNode(Node):
     internalNodes = []
 
